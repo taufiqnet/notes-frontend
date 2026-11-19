@@ -1,73 +1,101 @@
 # Secure Note-Taking Application - Frontend Client
 
-A lightweight, minimal, and fully functional Single Page Application (SPA) built using vanilla HTML5, CSS3, and JavaScript (ES6+). Zero build-step requirement, zero styling libraries/templates, and 100% focused on backend correctness, authentication, role isolation, and aggregation visualization.
+A minimal, fast, and functional Single Page Application (SPA) built using vanilla HTML5, CSS3, and JavaScript (ES6+). Zero build tools, zero UI frameworks or styling templates, and 100% focused on backend correctness, authentication, role isolation, and aggregation visualization.
+
+---
+
+## Live Deployments & Evaluation Credentials
+
+- **Live Application**: [https://notes-frontend-gold.vercel.app](https://notes-frontend-gold.vercel.app)
+- **Connected Backend API**: [https://notes-backend-virid.vercel.app/api](https://notes-backend-virid.vercel.app/api)
+
+### Evaluation Credentials
+
+| Role | Email | Password | Features to Test |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | `admin@example.com` | `AdminPassword123!` | Users CRUD, view all notes across system with owner filter, Scenario 1 Interests Aggregation |
+| **Standard User** | Register any new account | Min 6 chars | Personal notes CRUD, update profile interests, publish community posts, view Scenario 2 posts |
+
+> **Tip**: The login screen on the live website includes an **"Auto-fill Admin Credentials"** button for quick one-click evaluation!
 
 ---
 
 ## Features
 
-- **Auth & Session Management**:
+- **Authentication & Roles**:
   - Public registration (strictly creates `user` role).
-  - Secure JWT storage in `localStorage` with automatic `Bearer` header injection.
+  - Secure JWT storage in `localStorage` with automatic `Bearer <token>` header injection on all API requests.
   - Active session validation via `GET /api/auth/me`.
-  - Conditional navigation rendering based on `role === 'admin'`.
+  - Conditional navigation rendering: the **Admin Panel** tab is displayed **only** when `role === 'admin'`.
 - **User Notes**:
   - Paginated list of confidential notes owned exclusively by the current user.
-  - Create, inline edit, and delete notes.
+  - Create note, inline edit note, and delete note.
+  - Other users' notes are strictly isolated and protected by the backend (403 Forbidden).
 - **User Profile**:
-  - View identity details and update display name and interests tags (`PUT /api/auth/me`).
+  - View identity details (User ID, Role, Email).
+  - Update display name and comma-separated interests tags (`PUT /api/auth/me`). Role is immutable.
 - **Community Posts (Public & Authenticated)**:
-  - Publicly accessible paginated feed of community posts.
+  - Publicly accessible paginated feed of community posts (no authentication required to read).
   - Create posts when authenticated.
   - Strict ownership rules: only author can edit/delete; admin can delete.
-  - Integrated link to inspect author's profile and aggregated post history (**Scenario 2**).
-- **Admin Management Panel (`role === 'admin'` only)**:
-  - **Users CRUD**: Paginated list of registered accounts, create new accounts with specific roles, delete users with cascading cleanup.
-  - **All Notes**: View all system notes across all users, with optional filter by `?owner=<userId>`.
+  - Clickable **"View author posts (Scenario 2)"** link on any post to inspect the author's profile and aggregated post history.
+- **Admin Management Dashboard (`role === 'admin'` only)**:
+  - **Users CRUD**: Paginated list of registered accounts, create new accounts with specific roles (`user` or `admin`), delete users with cascading cleanup.
+  - **All System Notes**: View all notes across all users, with optional filter by `?owner=<userId>`, inline edit, and delete.
   - **Scenario 1 Aggregation View**: Interactive table showing user accounts grouped by interest category, with count, user list, pagination, and optional `?interest=` search filter.
 - **Configurable API Endpoint**: Centralized `config.js` (`window.API_URL`).
 
 ---
 
-## Getting Started
+## Project Structure
 
-### Local Development
+```text
+notes-frontend/
+├── app.js          # Application logic, state, API wrapper, pagination, event handlers
+├── config.js       # Centralized API URL configuration (window.API_URL)
+├── index.html      # Semantic HTML views (Auth, Notes, Profile, Posts, Scenario 2, Admin)
+├── style.css       # Clean, minimal unstyled CSS
+├── vercel.json     # Static SPA routing configuration
+└── README.md       # Frontend documentation
+```
 
-1. Open `config.js` and ensure the API base URL matches your backend:
+---
+
+## Local Development
+
+1. Open `config.js` and set the backend API URL:
    ```javascript
+   // For local backend:
    window.API_URL = 'http://localhost:5000/api';
+
+   // For deployed backend:
+   window.API_URL = 'https://notes-backend-virid.vercel.app/api';
    ```
 2. Serve the static files using any local HTTP server:
    ```bash
    # Option A: Python HTTP server
    python -m http.server 3000
 
-   # Option B: Node http-server or npx serve
+   # Option B: Node npx serve
    npx serve . -p 3000
    ```
-3. Open your browser at `http://localhost:3000`.
+3. Open `http://localhost:3000` in your browser.
 
 ---
 
 ## Deployment to Vercel
 
-1. Initialize git and commit:
+1. **Push to GitHub**:
    ```bash
    git init
    git add .
    git commit -m "feat: initial commit for notes-frontend"
-   ```
-2. Push to GitHub:
-   ```bash
-   git remote add origin https://github.com/<username>/notes-frontend.git
    git branch -M main
+   git remote add origin https://github.com/<username>/notes-frontend.git
    git push -u origin main
    ```
-3. Deploy to Vercel:
-   - Import repository on [Vercel](https://vercel.com).
+2. **Deploy on Vercel**:
+   - Import the repository on [Vercel](https://vercel.com).
    - Set Framework Preset to **Other** (Static Site).
-   - In `config.js`, update `window.API_URL` to point to your deployed backend URL on Vercel:
-     ```javascript
-     window.API_URL = 'https://your-notes-backend.vercel.app/api';
-     ```
-   - Deploy. The included `vercel.json` ensures all route requests fallback gracefully to `index.html`.
+   - Leave Build Command and Output Directory empty.
+   - Click **Deploy**.

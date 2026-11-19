@@ -99,6 +99,12 @@ function showAuthTab(tab) {
   document.getElementById('tab-register-btn').className = tab === 'register' ? 'active' : '';
 }
 
+function fillAdminCredentials() {
+  document.getElementById('login-email').value = 'admin@example.com';
+  document.getElementById('login-password').value = 'AdminPassword123!';
+  showAlert('Admin credentials filled. Click "Sign In" to evaluate.');
+}
+
 function showAdminTab(tab) {
   document.getElementById('admin-users-view').style.display = tab === 'users' ? 'block' : 'none';
   document.getElementById('admin-notes-view').style.display = tab === 'notes' ? 'block' : 'none';
