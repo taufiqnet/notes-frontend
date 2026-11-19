@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Note-Taking Application</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h2>Secure Notes App</h2>
+        <div id="user-status" style="font-size: 13px; color: #555;">Not logged in</div>
+      </div>
+      <nav id="main-nav">
+        <button id="nav-auth" class="active" onclick="switchSection('auth-section')">Login / Register</button>
+        <button id="nav-notes" style="display:none;" onclick="switchSection('notes-section')">My Notes</button>
+        <button id="nav-profile" style="display:none;" onclick="switchSection('profile-section')">My Profile</button>
+        <button id="nav-posts" onclick="switchSection('posts-section')">Community Posts</button>
+        <button id="nav-admin" style="display:none;" onclick="switchSection('admin-section')">Admin Panel</button>
+        <button id="nav-logout" style="display:none;" class="btn-secondary" onclick="logout()">Logout</button>
+      </nav>
+    </header>
+
+    <div id="global-alert" class="alert"></div>
+
+    <!-- AUTH SECTION (LOGIN / REGISTER) -->
+    <section id="auth-section" class="card">
+      <div class="sub-nav">
+        <button id="tab-login-btn" class="active" onclick="showAuthTab('login')">Login</button>
+        <button id="tab-register-btn" onclick="showAuthTab('register')">Register (User Role)</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <h3>Login</h3>
+        <div>
+          <label>Email:</label>
+          <input type="email" id="login-email" required placeholder="user@example.com">
+        </div>
+        <div>
+          <label>Password:</label>
+          <input type="password" id="login-password" required placeholder="Password">
+        </div>
+        <button type="submit">Sign In</button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" style="display:none;" onsubmit="handleRegister(event)">
+        <h3>Create New Account</h3>
+        <div>
+          <label>Full Name:</label>
+          <input type="text" id="reg-name" required placeholder="John Doe">
+        </div>
+        <div>
+          <label>Email:</label>
+          <input type="email" id="reg-email" required placeholder="john@example.com">
+        </div>
+        <div>
+          <label>Password (min 6 chars):</label>
+          <input type="password" id="reg-password" minlength="6" required placeholder="Password">
+        </div>
+        <div>
+          <label>Interests (comma separated):</label>
+          <input type="text" id="reg-interests" placeholder="e.g. cryptography, distributed systems, privacy">
+        </div>
+        <button type="submit">Register Account</button>
+      </form>
+    </section>
+
+    <!-- USER NOTES SECTION -->
+    <section id="notes-section" class="card" style="display:none;">
+      <h3>My Notes</h3>
+      
+      <!-- Create Note -->
+      <form id="create-note-form" onsubmit="handleCreateNote(event)" style="margin-bottom: 20px;">
+        <h4>Create New Note</h4>
+        <div>
+          <label>Title:</label>
+          <input type="text" id="note-title" required placeholder="Note title">
+        </div>
+        <div>
+          <label>Content:</label>
+          <textarea id="note-content" required placeholder="Enter confidential note content..."></textarea>
+        </div>
+        <button type="submit">Save Note</button>
+      </form>
+
+      <!-- Edit Note Form (Hidden by default) -->
+      <form id="edit-note-form" onsubmit="handleSaveEditedNote(event)" style="display:none; margin-bottom: 20px; border: 1px dashed #0066cc; padding: 10px;">
+        <h4>Edit Note</h4>
+        <input type="hidden" id="edit-note-id">
+        <div>
+          <label>Title:</label>
+          <input type="text" id="edit-note-title" required>
+        </div>
+        <div>
+          <label>Content:</label>
+          <textarea id="edit-note-content" required></textarea>
+        </div>
+        <button type="submit">Update Note</button>
+        <button type="button" class="btn btn-secondary" onclick="cancelEditNote()">Cancel</button>
+      </form>
+
+      <!-- Notes List -->
+      <h4>Your Notes List</h4>
+      <div id="notes-list-container">
+        <p>Loading notes...</p>
+      </div>
+
+      <!-- Notes Pagination -->
+      <div class="pagination">
+        <button id="notes-prev-btn" class="btn btn-secondary btn-small" onclick="changeNotesPage(-1)">Previous</button>
+        <span id="notes-page-info">Page 1 of 1</span>
+        <button id="notes-next-btn" class="btn btn-secondary btn-small" onclick="changeNotesPage(1)">Next</button>
+      </div>
+    </section>
+
+    <!-- PROFILE SECTION -->
+    <section id="profile-section" class="card" style="display:none;">
+      <h3>My Profile</h3>
+      <form id="profile-form" onsubmit="handleUpdateProfile(event)">
+        <div>
+          <label>User ID:</label>
+          <input type="text" id="prof-id" disabled style="background:#eee;">
+        </div>
+        <div>
+          <label>Role:</label>
+          <input type="text" id="prof-role" disabled style="background:#eee;">
+        </div>
+        <div>
+          <label>Email:</label>
+          <input type="email" id="prof-email" disabled style="background:#eee;">
+        </div>
+        <div>
+          <label>Full Name:</label>
+          <input type="text" id="prof-name" required>
+        </div>
+        <div>
+          <label>Interests (comma separated):</label>
+          <input type="text" id="prof-interests" placeholder="e.g. databases, algorithms, security">
+        </div>
+        <button type="submit">Save Profile Changes</button>
+      </form>
+    </section>
+
+    <!-- COMMUNITY POSTS SECTION -->
+    <section id="posts-section" class="card" style="display:none;">
+      <h3>Community Posts (Public)</h3>
+
+      <!-- Create Post (Visible only if logged in) -->
+      <div id="create-post-wrapper" style="display:none; margin-bottom: 20px;">
+        <form id="create-post-form" onsubmit="handleCreatePost(event)">
+          <h4>Create a Public Post</h4>
+          <div>
+            <label>Title:</label>
+            <input type="text" id="post-title" required placeholder="Post headline">
+          </div>
+          <div>
+            <label>Content:</label>
+            <textarea id="post-content" required placeholder="Write your post here..."></textarea>
+          </div>
+          <button type="submit">Publish Post</button>
+        </form>
+      </div>
+
+      <!-- Edit Post Form -->
+      <form id="edit-post-form" onsubmit="handleSaveEditedPost(event)" style="display:none; margin-bottom: 20px; border: 1px dashed #0066cc; padding: 10px;">
+        <h4>Edit Post</h4>
+        <input type="hidden" id="edit-post-id">
+        <div>
+          <label>Title:</label>
+          <input type="text" id="edit-post-title" required>
+        </div>
+        <div>
+          <label>Content:</label>
+          <textarea id="edit-post-content" required></textarea>
+        </div>
+        <button type="submit">Update Post</button>
+        <button type="button" class="btn btn-secondary" onclick="cancelEditPost()">Cancel</button>
+      </form>
+
+      <!-- Posts List -->
+      <div id="posts-list-container">
+        <p>Loading posts...</p>
+      </div>
+
+      <!-- Posts Pagination -->
+      <div class="pagination">
+        <button id="posts-prev-btn" class="btn btn-secondary btn-small" onclick="changePostsPage(-1)">Previous</button>
+        <span id="posts-page-info">Page 1 of 1</span>
+        <button id="posts-next-btn" class="btn btn-secondary btn-small" onclick="changePostsPage(1)">Next</button>
+      </div>
+    </section>
+
+    <!-- SCENARIO 2: USER'S POSTS AGGREGATION VIEW -->
+    <section id="user-posts-section" class="card" style="display:none;">
+      <button class="btn btn-secondary btn-small" onclick="switchSection('posts-section')">← Back to All Posts</button>
+      <h3 style="margin-top: 10px;">User Profile & Aggregated Posts (Scenario 2)</h3>
+      <div id="user-profile-card" style="padding: 10px; background: #eee; margin-bottom: 15px;"></div>
+
+      <h4>Posts by this User</h4>
+      <div id="user-aggregated-posts-container"></div>
+
+      <!-- Pagination for User's Posts -->
+      <div class="pagination">
+        <button id="user-posts-prev-btn" class="btn btn-secondary btn-small" onclick="changeUserPostsPage(-1)">Previous</button>
+        <span id="user-posts-page-info">Page 1 of 1</span>
+        <button id="user-posts-next-btn" class="btn btn-secondary btn-small" onclick="changeUserPostsPage(1)">Next</button>
+      </div>
+    </section>
+
+    <!-- ADMIN PANEL SECTION (Role === admin only) -->
+    <section id="admin-section" class="card" style="display:none;">
+      <h3>Admin Management Dashboard</h3>
+      
+      <div class="sub-nav">
+        <button id="admin-tab-users-btn" class="active" onclick="showAdminTab('users')">Users CRUD</button>
+        <button id="admin-tab-notes-btn" onclick="showAdminTab('notes')">All System Notes</button>
+        <button id="admin-tab-interests-btn" onclick="showAdminTab('interests')">Users Grouped by Interests (Scenario 1)</button>
+      </div>
+
+      <!-- Admin Sub-tab 1: Users CRUD -->
+      <div id="admin-users-view">
+        <form id="admin-create-user-form" onsubmit="handleAdminCreateUser(event)" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 10px;">
+          <h4>Create New User (as Admin)</h4>
+          <div>
+            <label>Name:</label>
+            <input type="text" id="admin-user-name" required>
+          </div>
+          <div>
+            <label>Email:</label>
+            <input type="email" id="admin-user-email" required>
+          </div>
+          <div>
+            <label>Password:</label>
+            <input type="password" id="admin-user-password" minlength="6" required>
+          </div>
+          <div>
+            <label>Role:</label>
+            <select id="admin-user-role">
+              <option value="user">User</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+          <div>
+            <label>Interests (comma separated):</label>
+            <input type="text" id="admin-user-interests" placeholder="technology, security">
+          </div>
+          <button type="submit">Create User</button>
+        </form>
+
+        <h4>Registered Users List</h4>
+        <div id="admin-users-table-container"></div>
+        <div class="pagination">
+          <button id="admin-users-prev-btn" class="btn btn-secondary btn-small" onclick="changeAdminUsersPage(-1)">Previous</button>
+          <span id="admin-users-page-info">Page 1 of 1</span>
+          <button id="admin-users-next-btn" class="btn btn-secondary btn-small" onclick="changeAdminUsersPage(1)">Next</button>
+        </div>
+      </div>
+
+      <!-- Admin Sub-tab 2: All Notes -->
+      <div id="admin-notes-view" style="display:none;">
+        <div style="margin-bottom: 10px;">
+          <label>Filter by Owner User ID (Optional):</label>
+          <input type="text" id="admin-notes-filter-owner" placeholder="Paste User ObjectId" style="width: 300px; display:inline-block;">
+          <button class="btn btn-small" onclick="loadAdminNotes(1)">Apply Filter</button>
+          <button class="btn btn-secondary btn-small" onclick="clearAdminNotesFilter()">Clear</button>
+        </div>
+        <div id="admin-notes-table-container"></div>
+        <div class="pagination">
+          <button id="admin-notes-prev-btn" class="btn btn-secondary btn-small" onclick="changeAdminNotesPage(-1)">Previous</button>
+          <span id="admin-notes-page-info">Page 1 of 1</span>
+          <button id="admin-notes-next-btn" class="btn btn-secondary btn-small" onclick="changeAdminNotesPage(1)">Next</button>
+        </div>
+      </div>
+
+      <!-- Admin Sub-tab 3: Grouped by Interests (Scenario 1 Aggregation) -->
+      <div id="admin-interests-view" style="display:none;">
+        <h4>Scenario 1: Single Aggregation Pipeline Grouping Users by Interests</h4>
+        <div style="margin-bottom: 10px;">
+          <label>Filter by Specific Interest (Optional):</label>
+          <input type="text" id="admin-interests-filter" placeholder="e.g. music, coding" style="width: 250px; display:inline-block;">
+          <button class="btn btn-small" onclick="loadAdminInterests(1)">Filter</button>
+          <button class="btn btn-secondary btn-small" onclick="clearAdminInterestsFilter()">Reset</button>
+        </div>
+        <div id="admin-interests-container"></div>
+        <div class="pagination">
+          <button id="admin-interests-prev-btn" class="btn btn-secondary btn-small" onclick="changeAdminInterestsPage(-1)">Previous</button>
+          <span id="admin-interests-page-info">Page 1 of 1</span>
+          <button id="admin-interests-next-btn" class="btn btn-secondary btn-small" onclick="changeAdminInterestsPage(1)">Next</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
